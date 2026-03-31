@@ -13,6 +13,7 @@
 @prefix sio: <http://semanticscience.org/resource/> .
 @prefix adms: <http://www.w3.org/ns/adms#> .
 @prefix schema: <http://schema.org/> .
+@prefix .
 
 {% set default_lp = "https://ostrails.github.io/assessment-component-metadata-records/" ~ map.GeneralMap.valuesTagMap.name ~ "/" ~ map.GeneralMap.Abbreviation ~ ".ttl" %}
 {% set landing_page = map.GeneralMap.LandingPage if map.GeneralMap.LandingPage else default_lp %}
