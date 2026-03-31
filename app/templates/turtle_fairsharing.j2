@@ -80,7 +80,7 @@
 
 {% set seen_metrics = [] %} {# Prevent duplicated metrics if the same metric_url appears more than once #} 
 {% for key, fac in map.GeneralMap.valuesFACMap.items() %}
-{% if fac.metric_id and fac.metric_id.strip() and fac.metric_url and fac.metric_url.strip() and fac.metric_url not in seen_metrics %}
+{% if fac.metric_id and (fac.metric_id|string|trim) and fac.metric_url and fac.metric_url.strip() and fac.metric_url not in seen_metrics %}
 {% do seen_metrics.append(fac.metric_url) %}
 <{{ fac.metric_url }}> a dqv:Metric, ftr:Metric, dcat:Resource;
     rdfs:label "{{ fac.metric_name | default("No name defined") }}"^^xsd:string ;
