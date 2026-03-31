@@ -22,8 +22,7 @@
     {% if map.GeneralMap.Title %}dcterms:title "{{map.GeneralMap.Title}}"^^xsd:string ;
     rdfs:label "{{map.GeneralMap.Abbreviation}}"^^xsd:string ;{% endif %}
     {% if map.GeneralMap.Abbreviation %}vivo:abbreviation "{{map.GeneralMap.Abbreviation}}"^^xsd:string ;{% endif %}
-    {% if map.GeneralMap.Description %}dcterms:description """{{map.GeneralMap.Description}}"""^^xsd:string ;{% endif %}
-    {% if map.GeneralMap.valuesTaxonomyMap %}taxonomy ;{% else %}notaxonomy ;{% endif %}
+    {% if map.GeneralMap.Description %}dcterms:description """{{map.GeneralMap.Description}}"""^^xsd:string THIS IS A TEST ;{% endif %}
     {% set keyword_labels = [] %}{% for key, value in map.GeneralMap.valuesKeywordMap.items() %}{% do keyword_labels.append('"' ~ value.label ~ '"^^xsd:string') %}{% endfor %}{% for key, value in map.GeneralMap.valuesKeywordManualMap.items() %}{% do keyword_labels.append('"' ~ value.label ~ '"^^xsd:string') %}{% endfor %}{% if keyword_labels %}dcat:keyword {{ keyword_labels | join(", ") }} ;{% endif %}
     {% set taxonomy_labels = [] %}{% for key, value in map.GeneralMap.valuesTaxonomyMap.items() %}{% do taxonomy_labels.append('"' ~ value.label ~ '"^^xsd:string') %}{% endfor %}{% for key, value in map.GeneralMap.valuesTaxonomyManualMap.items() %}{% do taxonomy_labels.append('"' ~ value.label ~ '"^^xsd:string') %}{% endfor %}{% if taxonomy_labels %}schema:about {{ taxonomy_labels | join(", ") }} ;{% endif %}
     {% set theme_objects = [] %}{% for key, value in map.GeneralMap.valuesThemeMap.items() %}{% do theme_objects.append('<' ~ value.iri ~ '>') %}{% endfor %}{% for key, value in map.GeneralMap.valuesThemeManualMap.items() %}{% do theme_objects.append('<' ~ value.iri ~ '>') %}{% endfor %}{% if theme_objects %}ftr:applicationArea {{ theme_objects | join(", ") }} ;{% endif %}
