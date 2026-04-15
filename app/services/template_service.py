@@ -26,18 +26,6 @@ def render_json_template(input_data: dict) -> dict:
     rendered = render_template("json_fairsharing.j2", input_data)
     return json.loads(rendered)
     
-def render_turtle_template(input_data: dict) -> str:
-    # 1. FAIR Wizard document template (CRÍTICO)
-    processed = render_template(
-        "fair_wizard_document_template.j2",
-        input_data
-    )
-
-    # 2. JSON → dict
-    processed_dict = json.loads(processed)
-
-    # 3. Turtle rendering
-    return render_template(
-        "turtle_fairsharing.j2",
-        {"GeneralMap": processed_dict}
-    )
+def render_turtle_template(input_data: dict) -> dict:
+    rendered = render_template("turtle_fairsharing.j2", input_data)
+    return turtle.loads(rendered)
