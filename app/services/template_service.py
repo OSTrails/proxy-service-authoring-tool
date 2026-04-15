@@ -25,7 +25,6 @@ def render_template(template_name: str, input_data: dict) -> str:
 def render_json_template(input_data: dict) -> dict:
     rendered = render_template("json_fairsharing.j2", input_data)
     return json.loads(rendered)
-    
-def render_turtle_template(input_data: dict) -> dict:
-    rendered = render_template("turtle_fairsharing.j2", input_data)
-    return turtle.loads(rendered)
+
+def render_turtle_template(input_data: dict) -> str:
+    return render_template("turtle_fairsharing.j2", input_data)
