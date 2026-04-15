@@ -26,6 +26,13 @@ def render_json_template(input_data: dict) -> dict:
     rendered = render_template("json_fairsharing.j2", input_data)
     return json.loads(rendered)
 
+def render_turtle_template(input_data):
+    # Step 1: run your transformation template
+    processed = render_template("your_big_template.j2", input_data)
 
-def render_turtle_template(input_data: dict) -> str:
-    return render_template("turtle_fairsharing.j2", input_data)
+    # Step 2: convert JSON string → dict
+    processed_dict = json.loads(processed)
+
+    # Step 3: pass to turtle template
+    template = env.get_template("turtle_fairsharing.j2")
+    return template.render(map={"GeneralMap": processed_dict})
