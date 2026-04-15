@@ -40,3 +40,4 @@ def render_turtle_template(input_data: dict) -> str:
     return render_template(
         "turtle_fairsharing.j2",
         {"GeneralMap": processed_dict}
+    )
