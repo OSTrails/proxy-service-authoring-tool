@@ -33,7 +33,7 @@
     {% if map.GeneralMap.VersionNotes %}adms:versionNotes "{{map.GeneralMap.Abbreviation}}"^^xsd:string ;{% endif %}
     {% if map.GeneralMap.License %}dcterms:license <{{map.GeneralMap.License}}> ;{% endif %}
     ftr:status "Active"@en ;
-    {% if landing_page %}dcat:landingPage <{{ landing_page }}> ;{% endif %}    
+    {# {% if landing_page %}dcat:landingPage <{{ landing_page }}> ;{% endif %} #}
     {% if map.GeneralMap.EndpointURL %}dcat:endpointURL <{{map.GeneralMap.EndpointURL}}> ;{% endif %}
     {% if map.GeneralMap.EndpointURLDescription %}dcat:endpointDescription <{{map.GeneralMap.EndpointURLDescription}}> ;{% endif %}
     {% if map.GeneralMap.Specification %}ftr:scoringFunction <{{map.GeneralMap.Specification}}> ;{% endif %}
