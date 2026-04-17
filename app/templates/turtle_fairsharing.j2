@@ -41,6 +41,7 @@
     {% if map.GeneralMap.Specification %}ftr:scoringFunction <{{map.GeneralMap.Specification}}> ;{% endif %}
     {% if map.GeneralMap.CodeRepository %}doap:repository <{{map.GeneralMap.CodeRepository}}> ;{% endif %}
     {% if map.GeneralMap.valuesToolMap %}ftr:supportedBy {% for key, value in map.GeneralMap.valuesToolMap.items() %}<{{ value.url | default('https://w3id.org/FAIR-Champion', true) }}>{{ "," if not loop.last }}{{ ";" if loop.last }} {% endfor %}{% else %}{% endif %}
+    {% if not  map.GeneralMap.valuesToolMap %}ftr:supportedBy <https://w3id.org/FAIR-Champion> ;{% endif %}
     {% if map.GeneralMap.valuesDigitalObject %}dpv:IsApplicableFor {% for item in map.GeneralMap.valuesDigitalObject %}<{{ item.iri }}>{% if not loop.last %}, {% else %};{% endif %}{% endfor %}{% endif %}
     {% if map.GeneralMap.valuesOrganisationMap.items() %}{% for key, org in map.GeneralMap.valuesOrganisationMap.items() %}dcterms:creator <{{ org.url | default('https://fairsharing.org/organisations/' ~ org.id, true) }}>; {% endfor %}{% endif %}
     {% for key, fac in map.GeneralMap.valuesFACMap.items() %}{%- if fac.test_url and map.GeneralMap.valuesTagMap.name == "metric"-%}sio:SIO_000234 <{{ fac.test_url }}> ;
