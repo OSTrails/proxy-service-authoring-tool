@@ -14,13 +14,13 @@
 @prefix adms: <http://www.w3.org/ns/adms#> .
 @prefix schema: <http://schema.org/> .
 
+
 {% set default_lp = "https://ostrails.github.io/assessment-component-metadata-records/" ~ map.GeneralMap.valuesTagMap.name ~ "/" ~ map.GeneralMap.Abbreviation ~ ".ttl" %}
 {% set landing_page = map.GeneralMap.LandingPage if map.GeneralMap.LandingPage else default_lp %}
 
+
 {% if map.GeneralMap.Abbreviation %}<https://ostrails.github.io/assessment-component-metadata-records/{{map.GeneralMap.valuesTagMap.name}}/{{map.GeneralMap.Abbreviation}}.ttl> a {{ "ftr:Benchmark, dcat:Resource" if map.GeneralMap.valuesTagMap.name == "benchmark" else "ftr:Metric, dqv:Metric, dcat:Resource" if map.GeneralMap.valuesTagMap.name == "metric" else "ftr:Test, dcat:DataService" if map.GeneralMap.valuesTagMap.name == "test" else "ftr:Algorithm, dcat:DataService" if map.GeneralMap.valuesTagMap.name == "algorithm" else "dcat:DataService" }} ;{% endif %}
     {% if map.GeneralMap.LandingPage %}dcterms:identifier "{{ map.GeneralMap.LandingPage }}"^^xsd:string ;{% elif map.GeneralMap.Abbreviation %}dcterms:identifier "https://ostrails.github.io/assessment-component-metadata-records/{{ map.GeneralMap.valuesTagMap.name }}/{{ map.GeneralMap.Abbreviation }}.ttl"^^xsd:string ;{% endif %}
-    {% if map.GeneralMap.LandingPage %}rdfs:definedBy <{{ map.GeneralMap.LandingPage }}> ;{% elif map.GeneralMap.Abbreviation %}rdfs:definedBy "https://ostrails.github.io/assessment-component-metadata-records/{{ map.GeneralMap.valuesTagMap.name }}/{{ map.GeneralMap.Abbreviation }}.ttl" ;{% endif %}
-    {% if map.GeneralMap.LandingPage %}dcat:landingPage "{{ map.GeneralMap.LandingPage }}"^^xsd:anyURI ;{% elif map.GeneralMap.Abbreviation %}dcat:landingPage "https://ostrails.github.io/assessment-component-metadata-records/{{ map.GeneralMap.valuesTagMap.name }}/{{ map.GeneralMap.Abbreviation }}.ttl"^^xsd:anyURI ;{% endif %}
     {% if map.GeneralMap.Title %}dcterms:title "{{map.GeneralMap.Title}}"^^xsd:string ;
     rdfs:label "{{map.GeneralMap.Abbreviation}}"^^xsd:string ;{% endif %}
     {% if map.GeneralMap.Abbreviation %}vivo:abbreviation "{{map.GeneralMap.Abbreviation}}"^^xsd:string ;{% endif %}
@@ -33,14 +33,14 @@
     {% if map.GeneralMap.VersionNotes %}adms:versionNotes "{{map.GeneralMap.Abbreviation}}"^^xsd:string ;{% endif %}
     {% if map.GeneralMap.License %}dcterms:license <{{map.GeneralMap.License}}> ;{% endif %}
     ftr:status "Active"@en ;
-    {# {% if landing_page %}dcat:landingPage <{{ landing_page }}> ;{% endif %} #}
+    {% if landing_page %}dcat:landingPage <{{ landing_page }}> ;{% endif %}    
     {% if map.GeneralMap.EndpointURL %}dcat:endpointURL <{{map.GeneralMap.EndpointURL}}> ;{% endif %}
     {% if map.GeneralMap.EndpointURLDescription %}dcat:endpointDescription <{{map.GeneralMap.EndpointURLDescription}}> ;{% endif %}
     {% if map.GeneralMap.Specification %}ftr:scoringFunction <{{map.GeneralMap.Specification}}> ;{% endif %}
     {% if map.GeneralMap.CodeRepository %}doap:repository <{{map.GeneralMap.CodeRepository}}> ;{% endif %}
-    {% if map.GeneralMap.valuesToolMap %}ftr:supportedBy {% for key, value in map.GeneralMap.valuesToolMap.items() %} <{{value.url}}>{{ "," if not loop.last }}{{ ";" if loop.last }} {% endfor %}{% else %}ftr:supportedBy <https://w3id.org/FAIR-Champion> ;{% endif %}
+    {% if map.GeneralMap.valuesToolMap %}ftr:supportedBy {% for key, value in map.GeneralMap.valuesToolMap.items() %} <{{value.url}}>{{ "," if not loop.last }}{{ ";" if loop.last }} {% endfor %}{% endif %}
     {% if map.GeneralMap.valuesDigitalObject %}dpv:IsApplicableFor {% for item in map.GeneralMap.valuesDigitalObject %}<{{ item.iri }}>{% if not loop.last %}, {% else %};{% endif %}{% endfor %}{% endif %}
-    {% if map.GeneralMap.valuesOrganisationMap.items() %}{% for key, org in map.GeneralMap.valuesOrganisationMap.items() %}dcterms:creator <{{ org.url }}>; {% endfor %}{% endif %}
+    {% if map.GeneralMap.valuesOrganisationMap.items() %}{% for key, org in map.GeneralMap.valuesOrganisationMap.items() %}dcterms:creator <{{ org.url | default('https://fairsharing.org/organisations/' ~ org.id, true) }}>; {% endfor %}{% endif %}
     {% for key, fac in map.GeneralMap.valuesFACMap.items() %}{%- if fac.test_url and map.GeneralMap.valuesTagMap.name == "metric"-%}sio:SIO_000234 <{{ fac.test_url }}> ;
     {% if not loop.last %}
   
@@ -49,10 +49,10 @@
     {% if not loop.last %}
   
     {% endif %}{% endif %}{% endfor %}
-    {% for key, fac in map.GeneralMap.valuesFACMap.items() %}{%- if fac.test_url and fac.metric_id and fac.metric_url and map.GeneralMap.valuesTagMap.name == "benchmark"-%} ftr:hasAssociatedMetric <{{ fac.metric_url }}> ;{% if not loop.last %}
+    {% for key, fac in map.GeneralMap.valuesFACMap.items() %}{%- if fac.test_url and fac.metric_id and map.GeneralMap.valuesTagMap.name == "benchmark"-%} ftr:hasAssociatedMetric <{{ fac.metric_url }}> ;{% if not loop.last %}
 
     {% endif %}{% endif %}{% endfor %}
-    {% for key, fac in map.GeneralMap.valuesFACMap.items() %}{%- if fac.metric_id and fac.metric_url and map.GeneralMap.valuesTagMap.name == "test"-%} sio:SIO_000233 <{{ fac.metric_url }}> ;
+    {% for key, fac in map.GeneralMap.valuesFACMap.items() %}{%- if fac.metric_id and map.GeneralMap.valuesTagMap.name == "test"-%} sio:SIO_000233 <{{ fac.metric_url | default('https://fairsharing.org/' ~ fac.metric_id, true)}}> ;
     {% if not loop.last %}
   
     {% endif %}{% endif %}{% endfor %}
@@ -63,31 +63,22 @@
 
 
 
-{% set seen_orgs = [] %} {# Prevent duplicated organisations if the same org.url appears more than once #} 
 {% for key, org in map.GeneralMap.valuesOrganisationMap.items() %}
-{% if org.url and org.url.strip() and org.url not in seen_orgs %}
-{% do seen_orgs.append(org.url) %}
-<{{ org.url }}> a vcard:Organisation ;
+<{{ org.url | default('https://fairsharing.org/organisations/' ~ org.id, true) }}> a vcard:Organisation ;
     vcard:organisation-name "{{ org.label | default("No name defined") }}"^^xsd:string .{% if not loop.last %}
-  {% endif %}{% endif %}{% endfor %}
 
-{% set seen_orcids = [] %} {# Prevent duplicated orcids if the same person_orcid_code appears more than once #} 
-{% for key, person in map.GeneralMap.valuesPersonMap.items() %}{% if person.person_orcid_code and person.person_orcid_code.strip() and person.person_orcid_code not in seen_orcids %}
-{% do seen_orcids.append(person.person_orcid_code) %}
+  {% endif %}{% endfor %}
+{% for key, person in map.GeneralMap.valuesPersonMap.items() %}{% if person.person_orcid_code %}
 <https://orcid.org/{{person.person_orcid_code}}> a vcard:Individual, foaf:Agent ;
     vcard:fn "{{ person.person_orcid_name }}"^^xsd:string ;
     vcard:hasEmail <mailto:{{ person.person_email }}> .
     {% if not loop.last %}
-  {% endif %}{% endif %}{% endfor %}
 
-{% set seen_metrics = [] %} {# Prevent duplicated metrics if the same metric_url appears more than once #} 
-{% for key, fac in map.GeneralMap.valuesFACMap.items() %}
-{% if fac.metric_id and (fac.metric_id|string|trim) and fac.metric_url and fac.metric_url.strip() and fac.metric_url not in seen_metrics %}
-{% do seen_metrics.append(fac.metric_url) %}
-<{{ fac.metric_url }}> a dqv:Metric, ftr:Metric, dcat:Resource;
+  {% endif %}{% endif %}{% endfor %}
+{% for key, fac in map.GeneralMap.valuesFACMap.items() %}{% if fac.metric_id %}
+<{{ fac.metric_url | default('https://fairsharing.org/' ~ fac.metric_id, true) }}> a dqv:Metric, ftr:Metric, dcat:Resource;
     rdfs:label "{{ fac.metric_name | default("No name defined") }}"^^xsd:string ;
-    dcterms:identifier "{{ fac.metric_url }}"^^xsd:string .
-{% endif %}
+    dcterms:identifier "{{ fac.metric_url }}"^^xsd:string .{% endif %}
 {% endfor %}
 
 {% for key, fac in map.GeneralMap.valuesFACMap.items() %}{%- if fac.test_url -%}<{{ fac.test_url}}> a ftr:Test, dcat:DataService .    

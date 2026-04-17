@@ -10,8 +10,7 @@ TEMPLATE_DIR = os.path.join(
 env = Environment(
     loader=FileSystemLoader(TEMPLATE_DIR),
     autoescape=False,
-    extensions=["jinja2.ext.do"] ,  # REQUIRED for {% do %}
-    auto_reload=True # Avoid falling into caching templates
+    extensions=["jinja2.ext.do"]  # REQUIRED for {% do %}
 )
 
 

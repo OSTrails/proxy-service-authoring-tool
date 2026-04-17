@@ -48,6 +48,10 @@ GITHUB_OWNER = "OSTrails"
 GITHUB_REPO = "assessment-component-metadata-records"
 GITHUB_BRANCH = "main"
 
+print(AUTH_URL)
+print(DATA_URL)
+print(USERNAME)
+
 # FAIRsharing GraphQL settings
 FAIRSHARING_GRAPHQL_ENDPOINT = "https://api.fairsharing.org/graphql"
 FAIRSHARING_GRAPHQL_KEY = "484de7ca-4496-4ee7-8cbf-578d2923c08f"
@@ -425,4 +429,4 @@ async def render_turtle(input_json: dict = Body(...)):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
