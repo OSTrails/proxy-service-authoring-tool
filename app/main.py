@@ -39,10 +39,10 @@ async def health_check_head():
 # ═══════════════════════════════════════════════════════════════════
 
 
-UTH_URL = "https://api.fairsharing.org/users/sign_in"
-DATA_URL = "https://api.fairsharing.org/fairsharing_records/"
-USERNAME = "sara.curiel.manzanas"
-PASSWORD = "saraosfspassword"
+UTH_URL = os.getenv("AUTH_URL")
+DATA_URL = os.getenv("DATA_URL")
+USERNAME = os.getenv("USERNAME")
+PASSWORD = os.getenv("PASSWORD")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_OWNER = "OSTrails"
 GITHUB_REPO = "assessment-component-metadata-records"
