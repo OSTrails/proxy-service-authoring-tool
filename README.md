@@ -12,7 +12,7 @@ This service acts as a **proxy API** to authenticate and submit FAIR assessment 
 version: '3'
 services:
   api:
-    image: pabloalarconm/proxy-fs:1.3.1
+    image: saracuriel/proxy-fw:0.1.6
     ports:
       - "8000:8000"
     environment:
