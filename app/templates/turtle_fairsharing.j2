@@ -20,8 +20,8 @@
 
 
 {% if map.GeneralMap.Abbreviation %}<https://ostrails.github.io/assessment-component-metadata-records/{{map.GeneralMap.valuesTagMap.name}}/{{map.GeneralMap.Abbreviation}}.ttl> a {{ "ftr:Benchmark, dcat:Resource" if map.GeneralMap.valuesTagMap.name == "benchmark" else "ftr:Metric, dqv:Metric, dcat:Resource" if map.GeneralMap.valuesTagMap.name == "metric" else "ftr:Test, dcat:DataService" if map.GeneralMap.valuesTagMap.name == "test" else "ftr:Algorithm, dcat:DataService" if map.GeneralMap.valuesTagMap.name == "algorithm" else "dcat:DataService" }} ;{% endif %}
-    {% if map.GeneralMap.LandingPage %}dcterms:identifier "{{ map.GeneralMap.LandingPage }}"^^xsd:string ;{% elif map.GeneralMap.Abbreviation %}dcterms:identifier "https://ostrails.github.io/assessment-component-metadata-records/{{ map.GeneralMap.valuesTagMap.name }}/{{ map.GeneralMap.Abbreviation }}.ttl"^^xsd:string ;{% endif %}
-    {% if map.GeneralMap.LandingPage %}rdfs:definedBy "{{ map.GeneralMap.LandingPage }}"^^xsd:string ;{% elif map.GeneralMap.Abbreviation %}rdfs:definedBy "https://ostrails.github.io/assessment-component-metadata-records/{{ map.GeneralMap.valuesTagMap.name }}/{{ map.GeneralMap.Abbreviation }}.ttl" ;{% endif %}
+    {% if map.GeneralMap.Abbreviation %}dcterms:identifier "https://ostrails.github.io/assessment-component-metadata-records/{{ map.GeneralMap.valuesTagMap.name }}/{{ map.GeneralMap.Abbreviation }}.ttl"^^xsd:string ;{% endif %}
+    {% if map.GeneralMap.Abbreviation %}rdfs:isDefinedBy "https://ostrails.github.io/assessment-component-metadata-records/{{ map.GeneralMap.valuesTagMap.name }}/{{ map.GeneralMap.Abbreviation }}.ttl"^^xsd:anyURI ;{% endif %}
     {% if map.GeneralMap.LandingPage %}dcat:landingPage "{{ map.GeneralMap.LandingPage }}"^^xsd:anyURI ;{% elif map.GeneralMap.Abbreviation %}dcat:landingPage "https://ostrails.github.io/assessment-component-metadata-records/{{ map.GeneralMap.valuesTagMap.name }}/{{ map.GeneralMap.Abbreviation }}.ttl"^^xsd:anyURI ;{% endif %}
     {% if map.GeneralMap.Title %}dcterms:title "{{map.GeneralMap.Title}}"^^xsd:string ;
     rdfs:label "{{map.GeneralMap.Abbreviation}}"^^xsd:string ;{% endif %}
