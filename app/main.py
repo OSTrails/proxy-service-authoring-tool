@@ -39,7 +39,7 @@ async def health_check_head():
 # ═══════════════════════════════════════════════════════════════════
 
 
-UTH_URL = os.getenv("AUTH_URL")
+AUTH_URL = os.getenv("AUTH_URL")
 DATA_URL = os.getenv("DATA_URL")
 USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
