@@ -16,6 +16,8 @@
     "abbreviation": map.GeneralMap["Abbreviation"] if "Abbreviation" in map.GeneralMap else "",
     "description": map.GeneralMap["Description"] if "Description" in map.GeneralMap else "",
     "homepage": map.GeneralMap["LandingPage"] if map.GeneralMap.get("LandingPage") else "https://ostrails.github.io/assessment-component-metadata-records/" ~ map.GeneralMap.valuesTagMap.name ~ "/" ~ map.GeneralMap.Abbreviation ~ ".ttl",
+    "license": map.GeneralMap["License"] if "License" in map.GeneralMap else "",
+    "year_creation": map.GeneralMap["CreatedAt"].split('/')[-1] if "CreatedAt" in map.GeneralMap else "",
     "contacts": [],
     "associated_tools":[],
     "associated_tests":[],
@@ -101,7 +103,8 @@
       {%- do organisation_links_attributes.append({
         "relation": label,
         "is_lead": true,
-        "organisation_id": val.id
+        "organisation_id": val.id,
+        "organisation_name": val.label
       }) -%}
     {%- endfor -%}
   {%- else -%}
@@ -133,6 +136,19 @@
   {%- do domain_ids.append(val["iri"]) -%}
 {%- endfor -%}
 
+{# Taxonomies #}
+{%- set taxonomies = [] -%}
+{%- for key, val in map.GeneralMap.valuesTaxonomyMap.items() -%}
+  {%- do taxonomies.append(val["label"]) -%}
+{%- endfor -%}
+
+{# Countries #} 
+{%- set countries = {} -%}
+{%- for key, val in map.GeneralMap.valuesCountryMap.items() -%}
+  {%- do countries.update({"id":val["id"], "name":val["name"]}) -%}
+{%- endfor -%}
+
+
 {# Digital Object type #}
 {%- set digital_objects_ids = [] -%}
 {%- for item in map.GeneralMap.valuesDigitalObject -%}
@@ -147,9 +163,12 @@
     "record_type_id": tag_id,
     "subject_ids": subject_ids,
     "domain_ids": domain_ids,
+    "taxonomies": taxonomies,
     "record_associations_attributes":record_associations_attributes,
     "object_type_ids": digital_objects_ids,
-    "organisation_links_attributes": organisation_links_attributes
+    "organisation_links_attributes": organisation_links_attributes,
+    "status": "ready", 
+    "countries": countries
   }
 } -%}
 

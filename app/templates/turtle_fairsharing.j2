@@ -61,8 +61,8 @@
     {% endif %}{% endif %}{% endfor %}
     {% if map.GeneralMap.valuesPositiveMap %}ftr:hasPositiveValidation{% for key, val in map.GeneralMap.valuesPositiveMap.items() %} <{{ val.iri }}>{{ "," if not loop.last }}{{ ";" if loop.last }} {% endfor %}{% endif %}
     {% if map.GeneralMap.valuesNegativeMap %}ftr:hasNegativeValidation{% for key, val in map.GeneralMap.valuesNegativeMap.items() %} <{{ val.iri }}>{{ "," if not loop.last }}{{ ";" if loop.last }} {% endfor %}{% endif %}
-    {% if map.GeneralMap.valuesPersonMap %}dcterms:publisher  {% for key, person in map.GeneralMap.valuesPersonMap.items() %}<https://orcid.org/{{person.person_orcid_code}}> {{ "," if not loop.last }} {{ ";" if loop.last }} {% endfor %}{% endif %}
-    {% if map.GeneralMap.valuesPersonMap %}dcat:contactPoint  {% for key, person in map.GeneralMap.valuesPersonMap.items() %}<https://orcid.org/{{person.person_orcid_code}}> {{ "," if not loop.last }} {{ "." if loop.last }} {% endfor %}{% endif %}
+    {% if map.GeneralMap.valuesPersonMap %}dcterms:publisher  {% for key, person in map.GeneralMap.valuesPersonMap.items() %}{% if person.person_orcid_code =='' %}"FAIRsharing Team" {% else %}<https://orcid.org/{{person.person_orcid_code}}> {% endif %}{{ "," if not loop.last }} {{ ";" if loop.last }} {% endfor %}{% endif %}
+    {% if map.GeneralMap.valuesPersonMap %}dcat:contactPoint  {% for key, person in map.GeneralMap.valuesPersonMap.items() %}{% if person.person_orcid_code == '' %}<mailto:contact@fairsharing.org> {% else %}<https://orcid.org/{{person.person_orcid_code}}> {% endif %}{{ "," if not loop.last }} {{ "." if loop.last }} {% endfor %}{% endif %}
 
 
 
@@ -97,3 +97,4 @@
 {% if map.GeneralMap.Specification %}<{{map.GeneralMap.Specification}}> a sio:SIO_000090 .{% endif %}
 
 {#{{ map.GeneralMap | default({}) |tojson(4) }}#}
+
