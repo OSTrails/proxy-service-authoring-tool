@@ -52,10 +52,10 @@
     {% if not loop.last %}
   
     {% endif %}{% endif %}{% endfor %}
-    {% for key, fac in map.GeneralMap.valuesFACMap.items() %}{%- if fac.test_url and fac.metric_id and map.GeneralMap.valuesTagMap.name == "benchmark"-%} ftr:hasAssociatedMetric <{{ fac.metric_url }}> ;{% if not loop.last %}
+    {% for key, fac in map.GeneralMap.valuesFACMap.items() %}{%- if fac.test_url and fac.metric_url and map.GeneralMap.valuesTagMap.name == "benchmark"-%} ftr:hasAssociatedMetric <{{ fac.metric_url }}> ;{% if not loop.last %}
 
     {% endif %}{% endif %}{% endfor %}
-    {% for key, fac in map.GeneralMap.valuesFACMap.items() %}{%- if fac.metric_id and map.GeneralMap.valuesTagMap.name == "test"-%} sio:SIO_000233 <{{ fac.metric_url | default('https://fairsharing.org/' ~ fac.metric_id, true)}}> ;
+    {% for key, fac in map.GeneralMap.valuesFACMap.items() %}{%- if fac.metric_url and map.GeneralMap.valuesTagMap.name == "test"-%} sio:SIO_000233 <{{ fac.metric_url | default('https://fairsharing.org/' ~ fac.metric_id, true)}}> ;
     {% if not loop.last %}
   
     {% endif %}{% endif %}{% endfor %}
@@ -78,8 +78,8 @@
     {% if not loop.last %}
 
   {% endif %}{% endif %}{% endfor %}
-{% for key, fac in map.GeneralMap.valuesFACMap.items() %}{% if fac.metric_id %}
-<{{ fac.metric_url | default('https://fairsharing.org/' ~ fac.metric_id, true) }}> a dqv:Metric, ftr:Metric, dcat:Resource;
+{% for key, fac in map.GeneralMap.valuesFACMap.items() %}{% if fac.metric_url %}
+<{{ fac.metric_url }}> a dqv:Metric, ftr:Metric, dcat:Resource;
     rdfs:label "{{ fac.metric_name | default("No name defined") }}"^^xsd:string ;
     dcterms:identifier "{{ fac.metric_url }}"^^xsd:string .{% endif %}
 {% endfor %}
@@ -97,4 +97,5 @@
 {% if map.GeneralMap.Specification %}<{{map.GeneralMap.Specification}}> a sio:SIO_000090 .{% endif %}
 
 {#{{ map.GeneralMap | default({}) |tojson(4) }}#}
+
 
