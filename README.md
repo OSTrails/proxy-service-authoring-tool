@@ -12,7 +12,7 @@ This service acts as a **proxy API** to authenticate and submit FAIR assessment 
 version: '3'
 services:
   api:
-    image: saracuriel/proxy-fw:0.1.9 #check latest at https://hub.docker.com/r/saracuriel/proxy-fw/tags
+    image: saracuriel/proxy-fw:0.1.10 #check latest at https://hub.docker.com/r/saracuriel/proxy-fw/tags
     ports:
       - "8000:8000"
     environment:
