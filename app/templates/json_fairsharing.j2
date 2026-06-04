@@ -68,9 +68,15 @@
 {# Metric and FAIR principles #}
 {%- set record_associations_attributes = [] -%}
 {%- for key, val in map.GeneralMap.valuesFACMap.items() -%}
-  {%- if val["metric_id"] -%}
+  {%- if val["metric_url"] and val["metric_id"] -%}
     {%- do record_associations_attributes.append({
       "linked_record_id": val["metric_id"],
+      "linked_record_url": val["metric_url"],
+      "record_assoc_label_id": 14
+    }) -%}
+  {%- elif val["metric_url"] -%}
+    {%- do record_associations_attributes.append({
+      "linked_record_url": val["metric_url"],
       "record_assoc_label_id": 14
     }) -%}
   {%- endif -%}
