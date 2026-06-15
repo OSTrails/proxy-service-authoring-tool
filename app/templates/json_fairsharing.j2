@@ -17,7 +17,7 @@
     "description": map.GeneralMap["Description"] if "Description" in map.GeneralMap else "",
     "homepage": map.GeneralMap["LandingPage"] if map.GeneralMap.get("LandingPage") else "https://ostrails.github.io/assessment-component-metadata-records/" ~ map.GeneralMap.valuesTagMap.name ~ "/" ~ map.GeneralMap.Abbreviation ~ ".ttl",
     "license": map.GeneralMap["License"] if "License" in map.GeneralMap else "",
-    "year_creation": map.GeneralMap["CreatedAt"].split('/')[-1] if "CreatedAt" in map.GeneralMap else "",
+    "year_creation": map.GeneralMap["CreatedAt"].split('/')[-1] | int if "CreatedAt" in map.GeneralMap else "",
     "contacts": [],
     "associated_tools":[],
     "associated_tests":[],
