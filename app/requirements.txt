@@ -8,3 +8,4 @@ httpx==0.28.1
 rdflib
 asyncio
 jinja2
+dotenv

@@ -1,9 +1,16 @@
+
+from dotenv import load_dotenv
+from pathlib import Path
+load_dotenv(Path(__file__).resolve().parent / ".env", override=True)
+
+
 from fastapi import FastAPI, Body
 from fastapi.responses import JSONResponse, PlainTextResponse
 from services.template_service import (
     render_json_template,
     render_turtle_template
 )
+from services.url_validation import check_fac_urls, ensure_fac_urls_resolvable
 
 import httpx, uvicorn, os, base64, re, traceback
 from fastapi import HTTPException, FastAPI, Request
@@ -38,14 +45,15 @@ async def health_check_head():
 # Environment configuration
 # ═══════════════════════════════════════════════════════════════════
 
-
 AUTH_URL = os.getenv("AUTH_URL")
 DATA_URL = os.getenv("DATA_URL")
 USERNAME = os.getenv("USERNAME")
 PASSWORD = os.getenv("PASSWORD")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-GITHUB_OWNER = "OSTrails"
-GITHUB_REPO = "assessment-component-metadata-records"
+
+
+GITHUB_OWNER = "OSTrails" #change for the official docker image to OSTrails
+GITHUB_REPO = "assessment-component-metadata-records" #change for the official docker image to assessment-component-metadata-records
 GITHUB_BRANCH = "main"
 
 # FAIRsharing GraphQL settings
@@ -53,6 +61,12 @@ FAIRSHARING_GRAPHQL_ENDPOINT = "https://api.fairsharing.org/graphql"
 FAIRSHARING_GRAPHQL_KEY = "484de7ca-4496-4ee7-8cbf-578d2923c08f"
 
 DCTERMS = Namespace("http://purl.org/dc/terms/")
+
+
+
+GITHUB_TOKEN = (os.getenv("GITHUB_TOKEN") or "").strip()
+if not GITHUB_TOKEN:
+    raise RuntimeError("GITHUB_TOKEN is not set")
 
 # ═══════════════════════════════════════════════════════════════════
 ############################### GITHUB ##############################
@@ -98,6 +112,7 @@ def _extract_record_info(rdf_text: str):
     record_id = re.sub(r"\.ttl$", "", filename, flags=re.IGNORECASE)
 
     return record_id, category, uri_candidate
+
 
 
 # ─────────────────────────────────────────────────────────────
@@ -167,11 +182,22 @@ async def commit_rdf_to_github(client: httpx.AsyncClient, rdf_text: str):
 )
 async def githubpush(input_json: dict = Body(...)):
     try:
+
+        url_report = await check_fac_urls(input_json)
+        if url_report["warnings"]:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": f"{len(url_report['warnings'])} URL(s) did not resolve. ",
+                    "url_check": url_report,
+                },
+            )
+
         # Step 1 — Render RDF
         rdf_text = render_turtle_template(input_json)
 
         # Step 2 — Commit to GitHub        
-        async with httpx.AsyncClient(timeout=20.0) as client:
+        async with httpx.AsyncClient(timeout=130.0) as client:
             response = await commit_rdf_to_github(client, rdf_text)
             return JSONResponse(content=response, status_code=200)
 
@@ -191,7 +217,6 @@ async def githubpush(input_json: dict = Body(...)):
             },
         )
 
-
 # ═══════════════════════════════════════════════════════════════════
 ########################## FAIRsharing ##############################
 # ═══════════════════════════════════════════════════════════════════
@@ -207,73 +232,8 @@ async def render_json(input_json: dict = Body(...)):
     rendered = render_json_template(input_json)
     return JSONResponse(content=rendered)
 
-# ─────────────────────────────────────────────────────────────
-# Helper: resolve subject/domain IDs (inside fairsharing_record)
-# ─────────────────────────────────────────────────────────────
-async def fetch_internal_id(client: httpx.AsyncClient, iri: str, type_: str):
-    if type_ == "subject":
-        query_field = "searchSubjects"
-    elif type_ == "domain":
-        query_field = "searchDomains"
-    else:
-        raise ValueError("Unknown type_")
-
-    query = {
-        "query": f"""
-        query {{
-            {query_field}(q: "{iri}") {{
-            id
-            iri
-            }}
-        }}
-        """
-    }
-
-    try:
-        resp = await client.post(
-            FAIRSHARING_GRAPHQL_ENDPOINT,
-            json=query,
-            headers={"x-graphql-key": FAIRSHARING_GRAPHQL_KEY},
-            timeout=10.0,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        results = data.get("data", {}).get(query_field, [])
-        if results and isinstance(results, list) and results[0].get("id"):
-            return results[0]["id"]
-    except Exception as e:
-        print(f"GraphQL query failed for {iri}: {e}")
-    return None
 
 
-async def resolve_subject_domain_ids(body_dict: dict) -> dict:
-    async with httpx.AsyncClient() as client:
-        record = body_dict.get("fairsharing_record", {})
-
-        # Resolve subjects
-        if "subject_ids" in record and isinstance(record["subject_ids"], list):
-            resolved_subjects = []
-            for iri in record["subject_ids"]:
-                internal_id = await fetch_internal_id(client, iri, "subject")
-                if internal_id is not None:
-                    resolved_subjects.append(internal_id)
-                else:
-                    print(f"Removed subject URI without internal ID: {iri}")
-            record["subject_ids"] = resolved_subjects
-
-        # Resolve domains
-        if "domain_ids" in record and isinstance(record["domain_ids"], list):
-            resolved_domains = []
-            for iri in record["domain_ids"]:
-                internal_id = await fetch_internal_id(client, iri, "domain")
-                if internal_id is not None:
-                    resolved_domains.append(internal_id)
-                else:
-                    print(f"Removed domain URI without internal ID: {iri}")
-            record["domain_ids"] = resolved_domains
-
-        body_dict["fairsharing_record"] = record
-    return body_dict
 # ─────────────────────────────────────────────────────────────
 # Remove empty JSON keys, create an error in FAIRsharing
 # ─────────────────────────────────────────────────────────────
@@ -291,45 +251,9 @@ def remove_empty(obj):
     else:
         return obj
 
-# ═══════════════════════════════════════════════════════════════════
-# Submit FAIRsharing endpoint
-# ═══════════════════════════════════════════════════════════════════
-@app.post("/questionnaire/submit-onlyFAIRsharing", summary="Submit record to FAIRsharing",response_class=JSONResponse)
-async def submit_record(input_json: dict = Body(...)):
-    """Authenticate with FAIRsharing, resolve subject/domain IDs, and submit the cleaned record."""
-
-    body_dict = render_json_template(input_json)
-
-    body_dict = await resolve_subject_domain_ids(body_dict)
-
-    body_dict = remove_empty(body_dict)
-    # print(json.dumps(body_dict, indent=2))  # Double-quoted JSON for readability
-    
-    async with httpx.AsyncClient() as client:
-        headers = {"Accept": "application/json", "Content-Type": "application/json"}
-        auth = await client.post(
-            AUTH_URL,
-            headers=headers,
-            json={"user": {"login": USERNAME, "password": PASSWORD}},
-            timeout=15.0,
-        )
-        auth.raise_for_status()
-        token = auth.json().get("jwt")
-        if not token:
-            raise HTTPException(500, "Missing jwt token")
-
-        headers["Authorization"] = f"Bearer {token}"
-        data_response = await client.post(DATA_URL, json=body_dict, headers=headers)
-        data_response.raise_for_status()
-
-        return {
-            "status": "success",
-            "data_status_code": data_response.status_code,
-            "response": data_response.json(),
-        }
-
 
 @app.post("/questionnaire/submit", summary="Submit record to Github and FAIRsharing",response_class=JSONResponse)
+
 async def submit_record(input_json: dict = Body(...)):
     """Authenticate with Github, then FAIRsharing:
     First Upload an RDF record (in Turtle format) to the OSTrails GitHub repository.
@@ -338,19 +262,30 @@ async def submit_record(input_json: dict = Body(...)):
     Then, for FAIRsharing, resolve subject/domain IDs, and submit the JSON-based cleaned record."""
 
     try:
+
+        url_report = await check_fac_urls(input_json)
+        if url_report["warnings"]:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": f"{len(url_report['warnings'])} URL(s) did not resolve. ",
+                    "url_check": url_report,
+                },
+            )
+
+
         # ─────────────────────────────
         # GitHub
         # ─────────────────────────────
         rdf_text = render_turtle_template(input_json)
 
-        async with httpx.AsyncClient(timeout=20.0) as client:
+        async with httpx.AsyncClient(timeout=130.0) as client:
             github_response = await commit_rdf_to_github(client, rdf_text)
 
         # ─────────────────────────────
         # FAIRsharing
         # ─────────────────────────────
         body_dict = render_json_template(input_json)
-        body_dict = await resolve_subject_domain_ids(body_dict)
         body_dict = remove_empty(body_dict)
 
         async with httpx.AsyncClient() as client:
@@ -363,7 +298,7 @@ async def submit_record(input_json: dict = Body(...)):
                 AUTH_URL,
                 headers=headers,
                 json={"user": {"login": USERNAME, "password": PASSWORD}},
-                timeout=15.0,
+                timeout=130.0,
             )
             auth.raise_for_status()
 
@@ -376,11 +311,22 @@ async def submit_record(input_json: dict = Body(...)):
             data_response = await client.post(
                 DATA_URL,
                 json=body_dict,
-                headers=headers
+                headers=headers,
+                timeout=130.0
             )
-            data_response.raise_for_status()
+            #data_response.raise_for_status()
 
             fairsharing_response = data_response.json()
+            if data_response.status_code >= 400:
+                raise HTTPException(
+                    status_code=502,
+                    detail={
+                        "message": "FAIRsharing rejected the submission",
+                        "fairsharing_status": data_response.status_code,
+                        "fairsharing_body": fairsharing_response if data_response.headers.get("content-type","").startswith("application/json") else data_response.text
+                    }
+                )
+
 
         # ─────────────────────────────
         # Return Combined Result
@@ -422,6 +368,22 @@ async def render_turtle(input_json: dict = Body(...)):
     """
     rendered = render_turtle_template(input_json)
     return PlainTextResponse(content=rendered, media_type="text/turtle")
+
+
+@app.post("/questionnaire/check/urls", response_class=JSONResponse)
+async def check_urls(input_json: dict = Body(...)):
+    """
+    Check that the assessment-component URLs in the rendered JSON resolve,
+    without submitting anything to GitHub or FAIRsharing.
+
+    Accepts either the raw questionnaire input (which gets rendered first) or
+    an already-rendered payload, detected by the presence of `valuesFACMap`.
+    """
+    if "valuesFACMap" in input_json:
+        body_dict = input_json
+    else:
+        body_dict = remove_empty(render_json_template(input_json))
+    return JSONResponse(content=await check_fac_urls(body_dict))
 
 
 if __name__ == "__main__":

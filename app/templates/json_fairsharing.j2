@@ -16,13 +16,13 @@
     "abbreviation": map.GeneralMap["Abbreviation"] if "Abbreviation" in map.GeneralMap else "",
     "description": map.GeneralMap["Description"] if "Description" in map.GeneralMap else "",
     "homepage": map.GeneralMap["LandingPage"] if map.GeneralMap.get("LandingPage") else "https://ostrails.github.io/assessment-component-metadata-records/" ~ map.GeneralMap.valuesTagMap.name ~ "/" ~ map.GeneralMap.Abbreviation ~ ".ttl",
-    "license": map.GeneralMap["License"] if "License" in map.GeneralMap else "",
     "year_creation": map.GeneralMap["CreatedAt"].split('/')[-1] | int if "CreatedAt" in map.GeneralMap else "",
     "contacts": [],
     "associated_tools":[],
     "associated_tests":[],
     "positive_examples":[],
     "negative_examples":[],
+    "status": "ready" 
 } -%}
 
 {# Tool #}
@@ -115,43 +115,66 @@
     {%- endfor -%}
   {%- else -%}
     {%- for label in roles -%}
-      {%- do organisation_links_attributes.append({
-        "relation": label,
-        "is_lead": true,
-        "organisation_attributes": {
-          "organisation_type_ids": val.organisation_type_ids | default([]),
-          "name": val.label | default(""),
-          "homepage": val.homepage | default(""),
-          "country_ids": val.country_ids | default([]),
-          "ror_link": val.url | default("")
-        }
-      }) -%}
+        {%- if val.url -%}
+            {%- do organisation_links_attributes.append({
+                "relation": label,
+                "is_lead": true,
+                "organisation_attributes": {
+                    "organisation_type_ids": val.organisation_type_ids | default([]),
+                    "name": val.label | default(""),
+                    "homepage": val.homepage | default(""),
+                    "country_ids": [val.country_id] if val.country_id else [],
+                    "ror_link": val.url | default("")
+                    }
+             }) -%}
+       {%- endif -%}
     {%- endfor -%}
   {%- endif -%}
 {%- endfor -%}
 
+
 {# Area of Knowledge - Subject #}
 {%- set subject_ids = [] -%}
 {%- for key, val in map.GeneralMap.valuesThemeMap.items() -%}
-  {%- do subject_ids.append(val["iri"]) -%}
+  {%- if val["id"] not in subject_ids -%}
+    {%- do subject_ids.append(val["id"] | int) -%}
+  {%- endif -%}
 {%- endfor -%}
 
 {# Keyword - Domain #}
 {%- set domain_ids = [] -%}
 {%- for key, val in map.GeneralMap.valuesKeywordMap.items() -%}
-  {%- do domain_ids.append(val["iri"]) -%}
+  {%- if val["id"] not in domain_ids -%}
+    {%- do domain_ids.append(val["id"] | int ) -%}
+  {%- endif -%}
 {%- endfor -%}
 
 {# Taxonomies #}
 {%- set taxonomies = [] -%}
 {%- for key, val in map.GeneralMap.valuesTaxonomyMap.items() -%}
-  {%- do taxonomies.append(val["label"]) -%}
+  {%- if val["id"] not in taxonomies -%}
+    {%- do taxonomies.append(val["id"] | int ) -%}
+  {%- endif -%}
 {%- endfor -%}
 
+{# Licences #}
+{%- set licences = [] -%}
+{%- for key, val in map.GeneralMap.valuesLicenceMap.items() -%}
+  {%- if val["id"] not in licences -%}
+    {%- do licences.append({
+        "licence_id": val["id"] | int ,
+        "relation": "applies_to_content"
+     }) -%}
+  {%- endif -%}
+{%- endfor -%}
+
+
 {# Countries #} 
-{%- set countries = {} -%}
+{%- set countries = [] -%}
 {%- for key, val in map.GeneralMap.valuesCountryMap.items() -%}
-  {%- do countries.update({"id":val["id"], "name":val["name"]}) -%}
+  {%- if val["id"] not in countries -%}
+    {%- do countries.append(val["id"] | int) -%}
+  {%- endif -%}
 {%- endfor -%}
 
 
@@ -169,15 +192,16 @@
     "record_type_id": tag_id,
     "subject_ids": subject_ids,
     "domain_ids": domain_ids,
-    "taxonomies": taxonomies,
+    "taxonomy_ids": taxonomies,
+    "licence_links_attributes": licences,
     "record_associations_attributes":record_associations_attributes,
     "object_type_ids": digital_objects_ids,
     "organisation_links_attributes": organisation_links_attributes,
-    "status": "ready", 
-    "countries": countries
+    "country_ids": countries
   }
 } -%}
 
 {{ fairsharing_record | default({}) | tojson(4) }}
 
 {%- endif -%}
+
