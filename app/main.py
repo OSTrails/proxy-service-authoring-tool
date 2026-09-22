@@ -52,8 +52,8 @@ PASSWORD = os.getenv("PASSWORD")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 
-GITHUB_OWNER = "saracuriel" #change for the official docker image to OSTrails
-GITHUB_REPO = "testing-assessment-component-metadata-records" #change for the official docker image to assessment-component-metadata-records
+GITHUB_OWNER = "OSTrails" #change for the official docker image to OSTrails
+GITHUB_REPO = "assessment-component-metadata-records" #change for the official docker image to assessment-component-metadata-records
 GITHUB_BRANCH = "main"
 
 # FAIRsharing GraphQL settings
@@ -183,6 +183,16 @@ async def commit_rdf_to_github(client: httpx.AsyncClient, rdf_text: str):
 async def githubpush(input_json: dict = Body(...)):
     try:
 
+        url_report = await check_fac_urls(input_json)
+        if url_report["warnings"]:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": f"{len(url_report['warnings'])} URL(s) did not resolve. ",
+                    "url_check": url_report,
+                },
+            )
+
         # Step 1 — Render RDF
         rdf_text = render_turtle_template(input_json)
 
@@ -206,7 +216,6 @@ async def githubpush(input_json: dict = Body(...)):
                 "trace": traceback.format_exc().splitlines()[-5:],
             },
         )
-
 
 # ═══════════════════════════════════════════════════════════════════
 ########################## FAIRsharing ##############################

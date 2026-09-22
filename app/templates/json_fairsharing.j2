@@ -115,20 +115,23 @@
     {%- endfor -%}
   {%- else -%}
     {%- for label in roles -%}
-      {%- do organisation_links_attributes.append({
-        "relation": label,
-        "is_lead": true,
-        "organisation_attributes": {
-          "organisation_type_ids": val.organisation_type_ids | default([]),
-          "name": val.label | default(""),
-          "homepage": val.homepage | default(""),
-          "country_ids": val.country_ids | default([]),
-          "ror_link": val.url | default("")
-        }
-      }) -%}
+        {%- if val.url -%}
+            {%- do organisation_links_attributes.append({
+                "relation": label,
+                "is_lead": true,
+                "organisation_attributes": {
+                    "organisation_type_ids": val.organisation_type_ids | default([]),
+                    "name": val.label | default(""),
+                    "homepage": val.homepage | default(""),
+                    "country_ids": [val.country_id] if val.country_id else [],
+                    "ror_link": val.url | default("")
+                    }
+             }) -%}
+       {%- endif -%}
     {%- endfor -%}
   {%- endif -%}
 {%- endfor -%}
+
 
 {# Area of Knowledge - Subject #}
 {%- set subject_ids = [] -%}
@@ -158,9 +161,13 @@
 {%- set licences = [] -%}
 {%- for key, val in map.GeneralMap.valuesLicenceMap.items() -%}
   {%- if val["id"] not in licences -%}
-    {%- do licences.append(val["id"] | int) -%}
+    {%- do licences.append({
+        "licence_id": val["id"] | int ,
+        "relation": "applies_to_content"
+     }) -%}
   {%- endif -%}
 {%- endfor -%}
+
 
 {# Countries #} 
 {%- set countries = [] -%}
@@ -186,7 +193,7 @@
     "subject_ids": subject_ids,
     "domain_ids": domain_ids,
     "taxonomy_ids": taxonomies,
-    "licence_ids": licences,
+    "licence_links_attributes": licences,
     "record_associations_attributes":record_associations_attributes,
     "object_type_ids": digital_objects_ids,
     "organisation_links_attributes": organisation_links_attributes,

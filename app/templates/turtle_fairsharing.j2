@@ -33,7 +33,10 @@
     {% set dimension_objects = [] %}{% for item in map.GeneralMap.valuesFAIRPrinciples + map.GeneralMap.valuesFAIRPrinciples4RS %}{% set url = '<' ~ item.url  ~ '>'%}{% do dimension_objects.append(url) %}{% endfor %}{% if dimension_objects %}ftr:inDimension {{ dimension_objects | join(", ") }} ;{% endif %}
     {% if map.GeneralMap.Version %}dcat:version "{{map.GeneralMap.Version}}"^^xsd:string ;{% endif %}
     {% if map.GeneralMap.VersionNotes %}adms:versionNotes "{{map.GeneralMap.Abbreviation}}"^^xsd:string ;{% endif %}
-    {% if map.GeneralMap.License %}dcterms:license <{{map.GeneralMap.License}}> ;{% endif %}
+    {% set licence_labels = [] %}
+    {% if map.GeneralMap.valuesLicenceMap %}{% for key, value in map.GeneralMap.valuesLicenceMap.items() %}{% if ("<" ~value.label ~ ">") not in licence_labels %}{% do licence_labels.append("<" ~value.label ~ ">") %}{% endif %}{% endfor %}{% endif %}
+    {% if map.GeneralMap.valuesLicenceManualMap %}{% for key, value in map.GeneralMap.valuesLicenceManualMap.items() %}{% if ("<" ~value.label ~ ">") not in licence_labels %}{% do licence_labels.append("<" ~value.label ~ ">") %}{% endif %}{% endfor %}{% endif %}
+    {% if licence_labels %}dcterms:license {{ licence_labels | join(", ") }} ;{% endif %}
     ftr:status "Active"@en ;
     {# {% if landing_page %}dcat:landingPage <{{ landing_page }}> ;{% endif %}   #} 
     {% if map.GeneralMap.EndpointURL %}dcat:endpointURL <{{map.GeneralMap.EndpointURL}}> ;{% endif %}
@@ -43,7 +46,14 @@
     {% if map.GeneralMap.valuesToolMap %}ftr:supportedBy {% for key, value in map.GeneralMap.valuesToolMap.items() %}<{{ value.url | default('https://w3id.org/FAIR-Champion', true) }}>{{ "," if not loop.last }}{{ ";" if loop.last }} {% endfor %}{% else %}{% endif %}
     {% if not  map.GeneralMap.valuesToolMap %}ftr:supportedBy <https://w3id.org/FAIR-Champion> ;{% endif %}
     {% if map.GeneralMap.valuesDigitalObject %}dpv:IsApplicableFor {% for item in map.GeneralMap.valuesDigitalObject %}<{{ item.iri }}>{% if not loop.last %}, {% else %};{% endif %}{% endfor %}{% endif %}
-    {% if map.GeneralMap.valuesOrganisationMap.items() %}{% for key, org in map.GeneralMap.valuesOrganisationMap.items() %}dcterms:creator <{{ org.url | default('https://fairsharing.org/organisations/' ~ org.id, true) }}>; {% endfor %}{% endif %}
+
+    {% set organisations = [] %}
+    {% for org in map.GeneralMap.valuesOrganisationMap.values() if org.url or org.id or org.label %}{% if org not in organisations %}{% do organisations.append(org) %}{% endif %}{% endfor %}
+    {% for org in organisations if org.id and not org.url %}{% do org.update({"url": "https://fairsharing.org/organisations/" ~ org.id}) %}{% endfor %}
+    {% set iris = organisations | selectattr('url') | map(attribute='url') | unique | list %}
+    {% if iris %}dcterms:creator <{{ iris | join('>, <') }}> ;{% endif %}
+
+
     {% for key, fac in map.GeneralMap.valuesFACMap.items() %}{%- if fac.test_url and map.GeneralMap.valuesTagMap.name == "metric"-%}sio:SIO_000234 <{{ fac.test_url }}> ;
     {% if not loop.last %}
   
@@ -66,8 +76,8 @@
 
 
 
-{% for key, org in map.GeneralMap.valuesOrganisationMap.items() %}
-<{{ org.url | default('https://fairsharing.org/organisations/' ~ org.id, true) }}> a vcard:Organisation ;
+{% for org in organisations %}
+<{{ org.url }}> a vcard:Organisation ;
     vcard:organisation-name "{{ org.label | default("No name defined") }}"^^xsd:string .{% if not loop.last %}
 
   {% endif %}{% endfor %}
@@ -97,5 +107,7 @@
 {% if map.GeneralMap.Specification %}<{{map.GeneralMap.Specification}}> a sio:SIO_000090 .{% endif %}
 
 {#{{ map.GeneralMap | default({}) |tojson(4) }}#}
+
+
 
 
